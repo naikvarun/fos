@@ -1,0 +1,18 @@
+{
+  "name": "@fos/order-service",
+  "version": "1.0.0",
+  "description": "",
+  "devDependencies": {
+    "@types/node": "^20.12.10",
+    "typescript": "^5.4.5"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@fos/common": "^1.0.0"
+  }
+}
