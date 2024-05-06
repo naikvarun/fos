@@ -1,7 +1,18 @@
-import { AggregateRoot, CustomerId, Money, OrderId, OrderStatus, RestaurantId } from '@fos/common';
+import {
+  AggregateRoot,
+  CustomerId,
+  Money,
+  OrderId,
+  OrderStatus,
+  RestaurantId,
+  generateOrderId,
+  ORDER_STATUS,
+} from '@fos/common';
 import { StreetAddress } from '../valueobject/street-address';
 import { OrderItem } from './order-item';
-import { TrackingId } from '../valueobject/tracking-id';
+import { TrackingId, generateTrackingId } from '../valueobject/tracking-id';
+import { OrderItemId, generateOrderItemId } from '../valueobject/order-item-id';
+import { OrderDomainException } from '../exception/order-domain-exception';
 
 export class Order extends AggregateRoot<OrderId> {
   public customerId: CustomerId;
@@ -14,8 +25,7 @@ export class Order extends AggregateRoot<OrderId> {
   public failureMessages: string[];
 
   private constructor(builder: ReturnType<typeof Order.builder>) {
-    super();
-    super.id = builder.id;
+    super(builder.id);
     this.customerId = builder.customerId;
     this.restaurantId = builder.restaurantId;
     this.deliveryAddress = builder.deliveryAddress;
@@ -24,6 +34,29 @@ export class Order extends AggregateRoot<OrderId> {
     this.trackingId = builder.trackingId;
     this.status = builder.status;
     this.failureMessages = builder.failureMessages;
+  }
+
+  public initialize() {
+    this.id = new OrderId(generateOrderId());
+    this.trackingId = new TrackingId(generateTrackingId());
+    this.status = ORDER_STATUS.PENDING;
+    this.initializeOrderItems();
+  }
+  private initializeOrderItems() {
+    this.items.forEach((item) => {
+      item.initialize(this.id, new OrderItemId(generateOrderItemId()));
+    });
+  }
+
+  public validate() {
+    this.validateInitialOrder();
+    this.validateTotalPrice();
+    this.validateItemsPrice();
+  }
+  private validateInitialOrder() {
+    if (this.status !== 'pending') {
+      throw new OrderDomainException('Order not in valid state for initalization');
+    }
   }
 
   public static builder() {

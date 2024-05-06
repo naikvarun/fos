@@ -10,13 +10,17 @@ export class OrderItem extends BaseEntity<OrderItemId> {
   public readonly subTotal: Money;
 
   public constructor(builder: ReturnType<typeof OrderItem.builder>) {
-    super();
-    super.id = builder.id;
+    super(builder.id);
     this.orderId = builder.orderId;
     this.product = builder.product;
     this.quantity = builder.quantity;
     this.price = builder.price;
     this.subTotal = builder.subTotal;
+  }
+
+  initialize(orderId: OrderId, orderItemId: OrderItemId) {
+    this.id = orderItemId;
+    this.orderId = orderId;
   }
 
   public static builder() {
