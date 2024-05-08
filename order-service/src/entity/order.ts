@@ -53,6 +53,25 @@ export class Order extends AggregateRoot<OrderId> {
     this.validateTotalPrice();
     this.validateItemsPrice();
   }
+  private validateItemsPrice() {
+    const itemsTotal = this.items.map((item) => {
+      this.validateItemPrice(item)
+      return item.subTotal;
+    }).reduce((total, itemPrice) => total.add(itemPrice), Money.ZERO);
+    if(! this.price.isEqualTo(itemsTotal)) {
+      throw new OrderDomainException(`Order price ${this.price} is not equal to total items price ${itemsTotal}`)
+    }
+  }
+  private validateItemPrice(item: OrderItem) {
+    if(!item.isPriceValid()) {
+      throw new OrderDomainException(`Item price is not valid for ${item.id}`)
+    }
+  }
+  private validateTotalPrice() {
+    if (!this.price.isGreaterThan(Money.ZERO)) {
+      throw new OrderDomainException('Order price should be greater than zero');
+    }
+  }
   private validateInitialOrder() {
     if (this.status !== 'pending') {
       throw new OrderDomainException('Order not in valid state for initalization');

@@ -9,7 +9,7 @@ export class OrderItem extends BaseEntity<OrderItemId> {
   public readonly price: Money;
   public readonly subTotal: Money;
 
-  public constructor(builder: ReturnType<typeof OrderItem.builder>) {
+  private constructor(builder: ReturnType<typeof OrderItem.builder>) {
     super(builder.id);
     this.orderId = builder.orderId;
     this.product = builder.product;
@@ -18,9 +18,17 @@ export class OrderItem extends BaseEntity<OrderItemId> {
     this.subTotal = builder.subTotal;
   }
 
-  initialize(orderId: OrderId, orderItemId: OrderItemId) {
+  public initialize(orderId: OrderId, orderItemId: OrderItemId) {
     this.id = orderItemId;
     this.orderId = orderId;
+  }
+
+  public isPriceValid(): boolean {
+    return (
+      this.price.isGreaterThan(Money.ZERO) &&
+      this.price.isEqualTo(this.product.price) &&
+      this.subTotal.isEqualTo(this.price.multiply(this.quantity))
+    );
   }
 
   public static builder() {
