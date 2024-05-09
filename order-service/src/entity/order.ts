@@ -54,17 +54,19 @@ export class Order extends AggregateRoot<OrderId> {
     this.validateItemsPrice();
   }
   private validateItemsPrice() {
-    const itemsTotal = this.items.map((item) => {
-      this.validateItemPrice(item)
-      return item.subTotal;
-    }).reduce((total, itemPrice) => total.add(itemPrice), Money.ZERO);
-    if(! this.price.isEqualTo(itemsTotal)) {
-      throw new OrderDomainException(`Order price ${this.price} is not equal to total items price ${itemsTotal}`)
+    const itemsTotal = this.items
+      .map((item) => {
+        this.validateItemPrice(item);
+        return item.subTotal;
+      })
+      .reduce((total, itemPrice) => total.add(itemPrice), Money.ZERO);
+    if (!this.price.isEqualTo(itemsTotal)) {
+      throw new OrderDomainException(`Order price ${this.price} is not equal to total items price ${itemsTotal}`);
     }
   }
   private validateItemPrice(item: OrderItem) {
-    if(!item.isPriceValid()) {
-      throw new OrderDomainException(`Item price is not valid for ${item.id}`)
+    if (!item.isPriceValid()) {
+      throw new OrderDomainException(`Item price is not valid for ${item.id}`);
     }
   }
   private validateTotalPrice() {
@@ -76,6 +78,43 @@ export class Order extends AggregateRoot<OrderId> {
     if (this.status !== 'pending') {
       throw new OrderDomainException('Order not in valid state for initalization');
     }
+  }
+
+  public pay(): void {
+    if (this.status !== ORDER_STATUS.PENDING) {
+      throw new OrderDomainException(`Order is not in correct state for pay operation`);
+    }
+    this.status = ORDER_STATUS.PAID;
+  }
+
+  public approve(): void {
+    if (this.status !== ORDER_STATUS.PAID) {
+      throw new OrderDomainException(`Order is not in correct state for approve operation`);
+    }
+    this.status = ORDER_STATUS.APPROVED;
+  }
+
+  public initCancel(failureMessages: string[]): void {
+    if (this.status !== ORDER_STATUS.PAID) {
+      throw new OrderDomainException(`Order is not correct state to initiate cancel operation`);
+    }
+    this.status = ORDER_STATUS.CANCELLING;
+    this.updateFailureMessages(failureMessages);
+  }
+
+  public cancel(failureMessages: string[]) {
+    if (!(this.status === ORDER_STATUS.PENDING || this.status === ORDER_STATUS.CANCELLING)) {
+      throw new OrderDomainException(`Order is not correct state to cancel operation`);
+    }
+    this.status = ORDER_STATUS.CANCELLED;
+    this.updateFailureMessages(failureMessages);
+  }
+
+  private updateFailureMessages(failureMessages: string[]) {
+    if (!failureMessages || failureMessages.length === 0) {
+      return;
+    }
+    this.failureMessages.push(...failureMessages);
   }
 
   public static builder() {
