@@ -76,7 +76,7 @@ export class Order extends AggregateRoot<OrderId> {
   }
   private validateInitialOrder() {
     if (this.status !== 'pending') {
-      throw new OrderDomainException('Order not in valid state for initalization');
+      throw new OrderDomainException('Order not in valid state for initialization');
     }
   }
 
