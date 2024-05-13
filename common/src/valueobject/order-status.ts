@@ -1,3 +1,5 @@
+import { EnumType } from "./enum-type";
+
 export const ORDER_STATUS = {
   PENDING: 'pending',
   PAID: 'paid',
@@ -6,5 +8,4 @@ export const ORDER_STATUS = {
   CANCELLING: 'cancelling',
 } as const;
 
-type EnumType<T> = T[keyof T];
 export type OrderStatus = EnumType<typeof ORDER_STATUS>;
